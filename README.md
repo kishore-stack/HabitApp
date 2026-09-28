@@ -104,3 +104,4 @@ After the scan finishes, open the SonarQube/SonarCloud dashboard for project key
 ## Notes
 - Streaks (`currentStreak`, `longestStreak`) are recalculated automatically whenever a habit is marked/unmarked complete.
 - Because storage is in-memory, restarting the app clears all data. Swapping in a real database later just means replacing `HabitRepository` with a Spring Data JPA repository — the service/controller layers don't need to change.
+"# HabitApp" 
