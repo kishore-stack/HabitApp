@@ -107,21 +107,31 @@ pipeline {
                             ]]
                         ])
 
+                        // Create local main branch from origin/main
+                        sh '''
+                            git checkout -B main origin/main
+                        '''
+
+                        // Update image tag in Helm values
                         sh """
                             sed -i 's/^  tag: .*/  tag: "${IMAGE_TAG}"/' helm/values.yaml
                         """
 
+                        // Display the change
                         sh 'git diff -- helm/values.yaml'
 
+                        // Commit the change
                         sh """
                             git config user.name "Jenkins"
                             git config user.email "jenkins@localhost"
 
                             git add helm/values.yaml
 
-                            git commit -m "Update Habit Tracker image to ${IMAGE_TAG}" || echo "No changes to commit"
+                            git commit -m "Update Habit Tracker image to ${IMAGE_TAG}" \
+                                || echo "No changes to commit"
                         """
 
+                        // Push GitOps change to GitHub
                         withCredentials([
                             usernamePassword(
                                 credentialsId: 'github-gitops',
