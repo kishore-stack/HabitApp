@@ -92,5 +92,66 @@ pipeline {
             }
         }
 
+        stage('Update GitOps') {
+            steps {
+                script {
+
+                    dir('gitops') {
+
+                        checkout([
+                            $class: 'GitSCM',
+                            branches: [[name: '*/main']],
+                            userRemoteConfigs: [[
+                                url: 'https://github.com/kishore-stack/HabitApp-GitOps.git',
+                                credentialsId: 'github-gitops'
+                            ]]
+                        ])
+
+                        sh """
+                            sed -i 's/^  tag: .*/  tag: "${IMAGE_TAG}"/' helm/values.yaml
+                        """
+
+                        sh 'git diff -- helm/values.yaml'
+
+                        sh """
+                            git config user.name "Jenkins"
+                            git config user.email "jenkins@localhost"
+
+                            git add helm/values.yaml
+
+                            git commit -m "Update Habit Tracker image to ${IMAGE_TAG}" || echo "No changes to commit"
+                        """
+
+                        withCredentials([
+                            usernamePassword(
+                                credentialsId: 'github-gitops',
+                                usernameVariable: 'GIT_USERNAME',
+                                passwordVariable: 'GIT_PASSWORD'
+                            )
+                        ]) {
+
+                            sh '''
+                                cat > askpass.sh <<'EOF'
+#!/bin/sh
+case "$1" in
+    *Username*) echo "$GIT_USERNAME" ;;
+    *Password*) echo "$GIT_PASSWORD" ;;
+esac
+EOF
+
+                                chmod 700 askpass.sh
+
+                                GIT_ASKPASS="$PWD/askpass.sh" \
+                                GIT_TERMINAL_PROMPT=0 \
+                                git push origin main
+
+                                rm -f askpass.sh
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+
     }
 }
