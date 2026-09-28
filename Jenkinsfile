@@ -25,5 +25,18 @@ pipeline {
             }
         }
 
+        stage('SonarQube Analysis') {
+            steps {
+                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                    sh '''
+                        mvn -B sonar:sonar \
+                          -Dsonar.projectKey=habit-tracker \
+                          -Dsonar.host.url=http://host.docker.internal:9000 \
+                          -Dsonar.token=$SONAR_TOKEN
+                    '''
+                }
+            }
+        }
+
     }
 }
