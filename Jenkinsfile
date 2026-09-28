@@ -13,13 +13,17 @@ pipeline {
             }
         }
 
-        stage('Verify') {
+        stage('Maven Build') {
             steps {
-                sh 'echo "Jenkins checkout successful"'
-                sh 'git rev-parse --short HEAD'
-                sh 'java -version'
-                sh 'mvn -version'
+                sh 'mvn -B clean package -DskipTests'
             }
         }
+
+        stage('Unit Test') {
+            steps {
+                sh 'mvn -B test'
+            }
+        }
+
     }
 }
